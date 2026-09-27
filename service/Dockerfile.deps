@@ -1,0 +1,18 @@
+FROM rust AS vendor
+WORKDIR /deps
+COPY Cargo.toml  .
+COPY src src
+RUN mkdir .cargo
+RUN cargo vendor > .cargo/config.toml
+
+# Had some problems vendoring ruffle
+RUN sed --in-place "s/core\/src\//ruffle_core\/src\//g" vendor/build_playerglobal/src/avm1.rs vendor/build_playerglobal/src/avm2.rs
+RUN sed --in-place "s/\"src\/avm1.rs\":\"[0-9a-fA-F]*\"/\"src\/avm1.rs\":\"$(sha256sum vendor/build_playerglobal/src/avm1.rs | cut -d' ' -f1)\"/g; s/\"src\/avm2.rs\":\"[0-9a-fA-F]*\"/\"src\/avm2.rs\":\"$(sha256sum vendor/build_playerglobal/src/avm2.rs | cut -d' ' -f1)\"/g" vendor/build_playerglobal/.cargo-checksum.json
+
+
+FROM rust
+RUN apt update && apt install default-jre-headless -y
+WORKDIR /build
+COPY --from=vendor /deps/vendor vendor
+COPY --from=vendor /deps/.cargo .cargo
+COPY --from=vendor /deps/Cargo.lock .

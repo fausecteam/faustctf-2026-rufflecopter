@@ -1,0 +1,27 @@
+# Human-readable name of the service
+name: rufflecopter
+# Name of the service for usage in paths, usernames etc.: Should only consist of lowercase alphanumeric
+# characters, must be identical to the (URL) project name of the GitLab repo
+slug: rufflecopter
+authors:
+  - Test <test.test@test.de>
+
+install:
+  container_images:
+    - faust.cs.fau.de:5000/rufflecopter_deps
+    - faust.cs.fau.de:5000/rufflecopter
+    - docker.io/postgrest/postgrest
+    - docker.io/postgres
+
+checker:
+  script_path: checker/checker.py
+  # Upper bound of how long the Checker Script takes to run (for a single team)
+  # Used for scheduling checks within a tick, executions taking longer *may* get terminated
+  max_duration: 60
+  debian_packages:
+    - python3-requests
+    - python3-bs4
+    - python3-pil
+    - python3-urllib3
+    - libzbar0
+  pip_packages: [ pyzbar ]
